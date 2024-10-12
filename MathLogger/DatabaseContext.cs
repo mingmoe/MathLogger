@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MathLogger;
 
-[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
 [JsonSerializable(typeof(Database))]
 internal partial class DatabaseContext : JsonSerializerContext
 {
