@@ -1,2 +1,2 @@
 
-dotnet run --configuration Release --project ./MathLogger/MathLogger.csproj
+dotnet run --configuration Release --no-restore --project ./MathLogger/MathLogger.csproj
