@@ -40,12 +40,37 @@ internal class Program
         Process.Start("git", "push").WaitForExit();
     }
 
+    static string ReadLine(string prompt, string? defaultValue = null)
+    {
+        AnsiConsole.Markup($"[underline yellow]{prompt} [/]");
+
+        var read = Console.ReadLine();
+
+        while (true)
+        {
+            if (string.IsNullOrWhiteSpace(read) && defaultValue != null)
+            {
+                return defaultValue;
+            }
+            if (!string.IsNullOrEmpty(read))
+            {
+                break;
+            }
+
+            read = Console.ReadLine();
+        }
+        Console.WriteLine();
+
+        return read.Trim();
+    }
+
     static void Main(string[] args)
     {
         if (args.Length != 0)
         {
             AnsiConsole.MarkupLine($"[underline yellow]Ignore any arguments![/]");
         }
+
         var database = LoadDatabase();
         AnsiConsole.MarkupLine($"[green]The database was loaded.[/]");
 
@@ -61,7 +86,7 @@ internal class Program
 
         while (true)
         {
-            var command = AnsiConsole.Prompt(new TextPrompt<string>(">>")).Trim();
+            var command = ReadLine(">>").Trim();
 
             if (string.IsNullOrEmpty(command))
             {
@@ -70,6 +95,11 @@ internal class Program
             else if (command == "save")
             {
                 SaveDatabase(database);
+                continue;
+            }
+            else if (command == "clear")
+            {
+                Console.Clear();
                 continue;
             }
             else if (command == "exit")
@@ -112,8 +142,8 @@ internal class Program
             }
             else if (command == "new-unit")
             {
-                var name = AnsiConsole.Prompt(new TextPrompt<string>("What's the name?"));
-                var description = AnsiConsole.Prompt(new TextPrompt<string>("What's the description?"));
+                var name = ReadLine("What's the name?");
+                var description = ReadLine("What's the description?");
 
                 if (database.Units.Any(u => u.Name == name))
                 {
@@ -133,12 +163,12 @@ internal class Program
                     continue;
                 }
 
-                var theProblem = AnsiConsole.Prompt(new TextPrompt<string>("What's the problem?"));
-                var description = AnsiConsole.Prompt(new TextPrompt<string>("What's the description?"));
-                var solution = AnsiConsole.Prompt(new TextPrompt<string>("What's the solution?"));
+                var theProblem = ReadLine("What's the problem?");
+                var description = ReadLine("What's the description?");
+                var solution = ReadLine("What's the solution?");
                 var createDate = Utilities.ParseHuman(
-                    AnsiConsole.Prompt(new TextPrompt<string>("(default today)What's the create date?")
-                    .DefaultValue(DateOnly.FromDateTime(DateTime.Now).ToReadable())));
+                    ReadLine("(default today)What's the create date?",
+                        DateOnly.FromDateTime(DateTime.Now).ToReadable()));
 
                 if (unit.ProblemSet.Any(p => p.TheProblem == theProblem))
                 {
@@ -160,37 +190,13 @@ internal class Program
             }
             else if (command == "get-todo")
             {
-                var current = DateOnly.FromDateTime(DateTime.Now);
-                List<(Unit, Problem)> dueProblems = [];
-
-                foreach (var unit in database.Units)
-                {
-                    foreach (var problem in unit.ProblemSet)
-                    {
-                        if (problem.NextReviewDate <= current)
-                        {
-                            dueProblems.Add(new(unit, problem));
-                        }
-                    }
-                }
-                dueProblems.Sort(ProblemCompare);
+                var dueProblems = getTwoDueProblems();
 
                 // get two problems
                 Table table = new();
                 table.AddColumns("Unit", "Thr problem", "Description", "Solution");
-                if (dueProblems.Count >= 1)
+                foreach (var problem in dueProblems)
                 {
-                    var problem = dueProblems[^1];
-
-                    table.AddRow(problem.Item1.Name,
-                        problem.Item2.TheProblem,
-                        problem.Item2.Description,
-                        problem.Item2.Solution);
-                }
-                if (dueProblems.Count >= 2)
-                {
-                    var problem = dueProblems[^2];
-
                     table.AddRow(problem.Item1.Name,
                         problem.Item2.TheProblem,
                         problem.Item2.Description,
@@ -202,9 +208,34 @@ internal class Program
                 AnsiConsole.Write(table);
                 AnsiConsole.WriteLine();
             }
+            else if (command == "answer-todo")
+            {
+                var dueProblems = getTwoDueProblems();
+
+                foreach (var due in dueProblems)
+                {
+                    Table table = new();
+                    table.AddColumns("Unit", "Thr problem", "Description", "Solution");
+                    table.AddRow(due.Item1.Name,
+                        due.Item2.TheProblem,
+                        due.Item2.Description,
+                        due.Item2.Solution);
+                    table.Expand();
+                    AnsiConsole.Write(table);
+                    AnsiConsole.WriteLine();
+
+                    var ease = AnsiConsole.Prompt(
+                        new TextPrompt<string>("What's the result?")
+                        .AddChoices([Ease.Again.ToString(), Ease.Hard.ToString(), Ease.Easy.ToString()]));
+
+                    due.Item2.ReviewHistory.Add(new() { Ease = Enum.Parse<Ease>(ease), ReviewDate = DateOnly.FromDateTime(DateTime.Now) });
+                    due.Item2.NextReviewDate = MemoryAlgorithm.CalculateNextReviewDay(due.Item2);
+                }
+
+            }
             else if (command == "help")
             {
-                AnsiConsole.MarkupLine("help save exit not-save list-unit print-unit new-unit new-problem get-todo");
+                AnsiConsole.MarkupLine("help save clear exit not-save list-unit print-unit new-unit new-problem get-todo answer-todo");
             }
             else
             {
@@ -221,7 +252,7 @@ internal class Program
 
         Unit? askUnit()
         {
-            var name = AnsiConsole.Prompt(new TextPrompt<string>("What's the unit name?"));
+            var name = ReadLine("What's the unit name?");
 
             var unit = database.Units.Find(u => u.Name == name);
 
@@ -233,11 +264,44 @@ internal class Program
 
             return unit;
         }
+        List<(Unit, Problem)> getTwoDueProblems()
+        {
+            var current = DateOnly.FromDateTime(DateTime.Now);
+            List<(Unit, Problem)> dueProblems = [];
+
+            foreach (var unit in database.Units)
+            {
+                foreach (var problem in unit.ProblemSet)
+                {
+                    if (problem.NextReviewDate <= current)
+                    {
+                        dueProblems.Add(new(unit, problem));
+                    }
+                }
+            }
+            dueProblems.Sort(ProblemCompare);
+            List<(Unit, Problem)> result = new();
+
+            if (dueProblems.Count >= 1)
+            {
+                result.Add(dueProblems[^1]);
+            }
+            if (dueProblems.Count >= 2)
+            {
+                result.Add(dueProblems[^2]);
+            }
+
+            return result;
+        }
         int ProblemCompare((Unit, Problem) a, (Unit, Problem) b)
         {
             if (a.Item2.NextReviewDate == b.Item2.NextReviewDate)
             {
-                return 0;
+                // 比较名称，保证我们的值永远没有相等的情况
+                // 此举是为了保证排序的稳定性
+                return string.Compare(
+                    a.Item1.Name + a.Item2.TheProblem,
+                    b.Item1.Name + b.Item2.TheProblem);
             }
             if (a.Item2.NextReviewDate > b.Item2.NextReviewDate)
             {
