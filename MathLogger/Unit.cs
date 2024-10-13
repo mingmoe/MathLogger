@@ -30,14 +30,25 @@ public class Unit
         table.AddColumn("[teal]NextReviewDate[/]");
         table.AddColumn("ReviewHistory");
 
+        var current = DateOnly.FromDateTime(DateTime.Now);
         foreach (var problem in ProblemSet)
         {
+            var dateStyle = "teal";
+            if (problem.NextReviewDate == current)
+            {
+                dateStyle = "yellow";
+            }
+            else if (problem.NextReviewDate < current)
+            {
+                dateStyle = "red";
+            }
+
             table.AddRow(
                 new Markup($"[aqua]{Markup.Escape(problem.CreateDate.ToReadable())}[/]"),
                 new Markup(Markup.Escape(problem.TheProblem)),
                 new Markup(Markup.Escape(problem.Description)),
                 new Markup(Markup.Escape(problem.Solution)),
-                new Markup(Markup.Escape(problem.NextReviewDate!.Value.ToReadable())),
+                new Markup($"[{dateStyle}]{Markup.Escape(problem.NextReviewDate!.Value.ToReadable())}[/]"),
                 problem.GetReviewHistoryTable());
         }
 

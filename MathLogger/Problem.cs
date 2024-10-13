@@ -56,7 +56,7 @@ public class Problem
             {
                 ease = "[lime]Easy[/]";
             }
-            table.AddRow(item.ReviewDate.ToReadable(), ease);
+            table.AddRow(Markup.Escape(item.ReviewDate.ToReadable()), ease);
         }
 
         return table;

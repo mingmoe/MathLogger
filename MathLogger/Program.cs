@@ -20,7 +20,7 @@ internal class Program
     {
         if (!File.Exists(DatabaseFileName))
         {
-            AnsiConsole.MarkupLine($"[underline green]Not found database({DatabaseFileName}).Create new one.[/]");
+            AnsiConsole.MarkupLine($"[underline green]Not found database({Markup.Escape(DatabaseFileName)}).Create new one.[/]");
             Database database = new();
             SaveDatabase(database);
         }
@@ -42,7 +42,7 @@ internal class Program
 
     static string ReadLine(string prompt, string? defaultValue = null)
     {
-        AnsiConsole.Markup($"[underline yellow]{prompt} [/]");
+        AnsiConsole.Markup($"[underline yellow]{Markup.Escape(prompt)} [/]");
 
         var read = Console.ReadLine();
 
@@ -68,11 +68,11 @@ internal class Program
     {
         if (args.Length != 0)
         {
-            AnsiConsole.MarkupLine($"[underline yellow]Ignore any arguments![/]");
+            AnsiConsole.MarkupLine("[underline yellow]Ignore any arguments![/]");
         }
 
         var database = LoadDatabase();
-        AnsiConsole.MarkupLine($"[green]The database was loaded.[/]");
+        AnsiConsole.MarkupLine("[green]The database was loaded.[/]");
 
         // 计算间隔时间
         foreach (var unit in database.Units)
@@ -82,25 +82,19 @@ internal class Program
                 problem.NextReviewDate = MemoryAlgorithm.CalculateNextReviewDay(problem);
             }
         }
-        AnsiConsole.MarkupLine($"[green]The unique spaced-repetition algorithm was applied.[/]");
+        AnsiConsole.MarkupLine("[green]The unique spaced-repetition algorithm was applied.[/]");
 
         while (true)
         {
-            var command = ReadLine(">>").Trim();
+            var command = string.Join('-', ReadLine(">>").Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
-            if (string.IsNullOrEmpty(command))
-            {
-                continue;
-            }
-            else if (command == "save")
+            if (command == "save")
             {
                 SaveDatabase(database);
-                continue;
             }
             else if (command == "clear")
             {
                 Console.Clear();
-                continue;
             }
             else if (command == "exit")
             {
@@ -110,17 +104,13 @@ internal class Program
             {
                 Environment.Exit(0);
             }
-
-            var commands = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            command = commands[0];
-
-            if (command == "list-unit")
+            else if (command == "list-unit")
             {
                 Table table = new();
-                table.AddColumns("Name", "Description");
+                table.AddColumns("[aqua]Name[/]", "Description");
                 foreach (var unit in database.Units)
                 {
-                    table.AddRow(unit.Name, unit.Description);
+                    table.AddRow($"[aqua]{Markup.Escape(unit.Name)}[/]", Markup.Escape(unit.Name));
                 }
 
                 table.Expand();
@@ -147,7 +137,7 @@ internal class Program
 
                 if (database.Units.Any(u => u.Name == name))
                 {
-                    AnsiConsole.MarkupLine($"[underline red]The unit name({name}) already exists.[/]");
+                    AnsiConsole.MarkupLine($"[underline red]The unit name({Markup.Escape(name)}) already exists.[/]");
                     continue;
                 }
                 var unit = new Unit() { Name = name, Description = description };
@@ -172,7 +162,7 @@ internal class Program
 
                 if (unit.ProblemSet.Any(p => p.TheProblem == theProblem))
                 {
-                    AnsiConsole.MarkupLine($"[underline red]The problem({theProblem}) already exists.[/]");
+                    AnsiConsole.MarkupLine($"[underline red]The problem({Markup.Escape(theProblem)}) already exists.[/]");
                     continue;
                 }
 
@@ -194,13 +184,15 @@ internal class Program
 
                 // get two problems
                 Table table = new();
-                table.AddColumns("Unit", "Thr problem", "Description", "Solution");
+                table.AddColumns("[teal]Unit[/]", "The problem", "Description", "Solution", "[red]Due date[/]");
                 foreach (var problem in dueProblems)
                 {
-                    table.AddRow(problem.Item1.Name,
-                        problem.Item2.TheProblem,
-                        problem.Item2.Description,
-                        problem.Item2.Solution);
+                    table.AddRow(
+                        $"[teal]{Markup.Escape(problem.Item1.Name)}[/]",
+                        Markup.Escape(problem.Item2.TheProblem),
+                        Markup.Escape(problem.Item2.Description),
+                        Markup.Escape(problem.Item2.Solution),
+                        $"[red]{Markup.Escape(problem.Item2.NextReviewDate!.Value.ToReadable())}[/]");
                 }
 
                 table.Expand();
@@ -216,10 +208,11 @@ internal class Program
                 {
                     Table table = new();
                     table.AddColumns("Unit", "Thr problem", "Description", "Solution");
-                    table.AddRow(due.Item1.Name,
-                        due.Item2.TheProblem,
-                        due.Item2.Description,
-                        due.Item2.Solution);
+                    table.AddRow(
+                        Markup.Escape(due.Item1.Name),
+                        Markup.Escape(due.Item2.TheProblem),
+                        Markup.Escape(due.Item2.Description),
+                        Markup.Escape(due.Item2.Solution));
                     table.Expand();
                     AnsiConsole.Write(table);
                     AnsiConsole.WriteLine();
@@ -239,16 +232,16 @@ internal class Program
             }
             else
             {
-                AnsiConsole.MarkupLine($"[underline red]Unknown command:{command}[/]");
+                AnsiConsole.MarkupLine($"[underline red]Unknown command:{Markup.Escape(command)}[/]");
             }
         }
 
         SaveDatabase(database);
-        AnsiConsole.MarkupLine($"[green]The database was saved.[/]");
+        AnsiConsole.MarkupLine("[green]The database was saved.[/]");
         CommitToGit();
-        AnsiConsole.MarkupLine($"[green]The git repository was committed.[/]");
+        AnsiConsole.MarkupLine("[green]The git repository was committed.[/]");
         GitPush();
-        AnsiConsole.MarkupLine($"[green]The git repository was pushed to the remote.[/]");
+        AnsiConsole.MarkupLine("[green]The git repository was pushed to the remote.[/]");
 
         Unit? askUnit()
         {
@@ -258,7 +251,7 @@ internal class Program
 
             if (unit == null)
             {
-                AnsiConsole.MarkupLine($"[underline red]Unknown unit:{name}[/]");
+                AnsiConsole.MarkupLine($"[underline red]Unknown unit:{Markup.Escape(name)}[/]");
                 return null;
             }
 
