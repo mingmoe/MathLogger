@@ -12,6 +12,66 @@
           "ReviewHistory": []
         }
       ]
+    },
+    {
+      "Name": "\u5BFC\u6570\u51FD\u6570\u6052\u6210\u7ACB",
+      "Description": "\u51FD\u6570 \u5BFC\u6570 \u6052\u6210\u7ACB",
+      "ProblemSet": [
+        {
+          "CreateDate": "2024-07-27",
+          "TheProblem": "P72",
+          "Description": "\u5207\u7EBF\u653E\u7F29",
+          "Solution": "\u65E0",
+          "ReviewHistory": []
+        },
+        {
+          "CreateDate": "2024-07-29",
+          "TheProblem": "\u5927\u672CP85",
+          "Description": "\u51F9\u51F8\u53CD\u8F6C",
+          "Solution": "\u65E0",
+          "ReviewHistory": []
+        },
+        {
+          "CreateDate": "2024-08-06",
+          "TheProblem": "\u5927\u672CP65\u4F8B\u98981 P67\u8BAD\u7EC32",
+          "Description": "\u7AEF\u70B9\u6548\u5E94\u53CA\u5176\u5931\u6548",
+          "Solution": "\u65E0",
+          "ReviewHistory": []
+        }
+      ]
+    },
+    {
+      "Name": "\u6BD4\u8F83\u5927\u5C0F",
+      "Description": "\u51FD\u6570 \u5BFC\u6570 \u6BD4\u8F83\u5927\u5C0F",
+      "ProblemSet": [
+        {
+          "CreateDate": "2024-07-30",
+          "TheProblem": "M073001 \u5927\u672CP61",
+          "Description": "\u6784\u9020\u6BD4\u8F83\u5927\u5C0F \u6CF0\u52D2\u5C55\u5F00",
+          "Solution": "\u65E0",
+          "ReviewHistory": []
+        },
+        {
+          "CreateDate": "2024-07-31",
+          "TheProblem": "M073101",
+          "Description": "\u6784\u9020\u6BD4\u8F83\u5927\u5C0F",
+          "Solution": "\u65E0",
+          "ReviewHistory": []
+        }
+      ]
+    },
+    {
+      "Name": "\u4E09\u89D2\u51FD\u6570",
+      "Description": "\u4E09\u89D2\u51FD\u6570 \u51FD\u6570",
+      "ProblemSet": [
+        {
+          "CreateDate": "2024-08-01",
+          "TheProblem": "M080101",
+          "Description": "\u4E09\u89D2\u51FD\u6570\u8BA1\u7B97",
+          "Solution": "\u65E0",
+          "ReviewHistory": []
+        }
+      ]
     }
   ]
 }
